@@ -26,6 +26,7 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from PyQt5.QtGui import QIcon
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'Rotate_Objects_dialog_base.ui'))
@@ -42,12 +43,17 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
     def rotate(self):
         layer = self.layer.currentLayer()
         angle = self.angle.value()
+        provider = layer.dataProvider()
         list_geom = []
         for feature in layer.getFeatures():
             geom = feature.geometry()
             centroid = feature.geometry().centroid().asPoint()
             geom.rotate(angle, centroid)
             list_geom.append([feature.id(), geom])
-        print(list_geom)
+
+        provider.changeGeometryValues({
+            value[0]: value[1] for value in list_geom
+        })
+
     def close_dlg(self):
         self.close()
