@@ -40,6 +40,7 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setWindowIcon(QIcon('icon.png'))
         self.btn_ok.clicked.connect(self.rotate)
         self.btn_cancel.clicked.connect(self.close_dlg)
+        self.angle.setMaximum(360)
 
     def rotate(self):
         layer = self.layer.currentLayer()
