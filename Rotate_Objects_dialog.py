@@ -40,7 +40,8 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
         self.btn_cancel.clicked.connect(self.close_dlg)
 
     def rotate(self):
-        pass
+        layer = self.layer.currentLayer()
+        angle = self.angle.value()
 
     def close_dlg(self):
         self.close()
