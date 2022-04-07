@@ -42,6 +42,12 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
     def rotate(self):
         layer = self.layer.currentLayer()
         angle = self.angle.value()
-
+        list_geom = []
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            centroid = feature.geometry().centroid().asPoint()
+            geom.rotate(angle, centroid)
+            list_geom.append([feature.id(), geom])
+        print(list_geom)
     def close_dlg(self):
         self.close()
