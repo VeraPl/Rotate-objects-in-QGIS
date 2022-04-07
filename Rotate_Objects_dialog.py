@@ -46,22 +46,23 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
         layer = self.layer.currentLayer()
         if not layer:
             QMessageBox.warning(self, "Warning", f"Download a vector layer!",
-                            QMessageBox.Ok)
-        angle = self.angle.value()
-        provider = layer.dataProvider()
-        list_geom = []
+                                QMessageBox.Ok)
+        else:
+            angle = self.angle.value()
+            provider = layer.dataProvider()
+            list_geom = []
 
-        for feature in layer.getFeatures():
-            geom = feature.geometry()
-            centroid = feature.geometry().centroid().asPoint()
-            geom.rotate(angle, centroid)
-            list_geom.append([feature.id(), geom])
+            for feature in layer.getFeatures():
+                geom = feature.geometry()
+                centroid = feature.geometry().centroid().asPoint()
+                geom.rotate(angle, centroid)
+                list_geom.append([feature.id(), geom])
 
-        layer.startEditing()
-        provider.changeGeometryValues({
-            value[0]: value[1] for value in list_geom
-        })
-        layer.commitChanges()
+            layer.startEditing()
+            provider.changeGeometryValues({
+                value[0]: value[1] for value in list_geom
+            })
+            layer.commitChanges()
 
     def close_dlg(self):
         self.close()
