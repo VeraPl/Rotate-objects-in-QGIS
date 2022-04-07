@@ -27,6 +27,7 @@ import os
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from PyQt5.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QMessageBox
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'Rotate_Objects_dialog_base.ui'))
@@ -42,6 +43,9 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def rotate(self):
         layer = self.layer.currentLayer()
+        if not layer:
+            QMessageBox.warning(self, "Warning", f"Download a vector layer!",
+                            QMessageBox.Ok)
         angle = self.angle.value()
         provider = layer.dataProvider()
         list_geom = []
