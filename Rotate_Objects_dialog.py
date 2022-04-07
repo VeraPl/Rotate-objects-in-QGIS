@@ -33,7 +33,14 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
-        """Constructor."""
         super(RotateObjectsDialog, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(QIcon('icon.png'))
+        self.btn_ok.clicked.connect(self.rotate)
+        self.btn_cancel.clicked.connect(self.close_dlg)
 
+    def rotate(self):
+        pass
+
+    def close_dlg(self):
+        self.close()
