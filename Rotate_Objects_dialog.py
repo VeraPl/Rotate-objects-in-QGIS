@@ -26,6 +26,8 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from PyQt5.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QMessageBox
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'Rotate_Objects_dialog_base.ui'))
@@ -33,7 +35,34 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
-        """Constructor."""
         super(RotateObjectsDialog, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(QIcon('icon.png'))
+        self.btn_ok.clicked.connect(self.rotate)
+        self.btn_cancel.clicked.connect(self.close_dlg)
+        self.angle.setMaximum(360)
 
+    def rotate(self):
+        layer = self.layer.currentLayer()
+        if not layer:
+            QMessageBox.warning(self, "Warning", f"Download a vector layer!",
+                                QMessageBox.Ok)
+        else:
+            angle = self.angle.value()
+            provider = layer.dataProvider()
+            list_geom = []
+
+            for feature in layer.getFeatures():
+                geom = feature.geometry()
+                centroid = feature.geometry().centroid().asPoint()
+                geom.rotate(angle, centroid)
+                list_geom.append([feature.id(), geom])
+
+            layer.startEditing()
+            provider.changeGeometryValues({
+                value[0]: value[1] for value in list_geom
+            })
+            layer.commitChanges()
+
+    def close_dlg(self):
+        self.close()
