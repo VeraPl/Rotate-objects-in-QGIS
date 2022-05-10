@@ -23,11 +23,14 @@
 """
 
 import os
-
 from qgis.PyQt import uic
-from qgis.PyQt import QtWidgets
-from PyQt5.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.core import QgsProcessingFeatureSourceDefinition, QgsFeatureRequest
+from qgis.PyQt import QtWidgets
+from qgis.utils import iface
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
+import processing
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'Rotate_Objects_dialog_base.ui'))
@@ -37,32 +40,36 @@ class RotateObjectsDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         super(RotateObjectsDialog, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
         self.btn_ok.clicked.connect(self.rotate)
-        self.btn_cancel.clicked.connect(self.close_dlg)
-        self.angle.setMaximum(360)
 
     def rotate(self):
-        layer = self.layer.currentLayer()
+        layer = iface.activeLayer()
         if not layer:
-            QMessageBox.warning(self, "Warning", f"Download a vector layer!",
+            QMessageBox.warning(self, "Warning", r"Загрузите векторный слой!",
                                 QMessageBox.Ok)
         else:
-            angle = self.angle.value()
-            provider = layer.dataProvider()
-            list_geom = []
+            angle = self.angle.text()
+            if angle.isdigit() or (angle[0] == "-" and angle[1:].isdigit()):
+                angle = int(angle)
+                provider = layer.dataProvider()
+                list_geom = []
+                calculate_center = processing.run('qgis:meancoordinates', {'INPUT': QgsProcessingFeatureSourceDefinition(\
+                    layer.name()+".shp", selectedFeaturesOnly=True, featureLimit=-1,\
+                    geometryCheck=QgsFeatureRequest.GeometryAbortOnInvalid),\
+                    'OUTPUT' : 'TEMPORARY_OUTPUT', 'UID' : '', 'WEIGHT' : '' })
+                for c in calculate_center["OUTPUT"].getFeatures():
+                    center = c.geometry().asPoint()
+                for feature in layer.selectedFeatures():
+                    geom = feature.geometry()
+                    geom.rotate(angle, center)
+                    list_geom.append([feature.id(), geom])
 
-            for feature in layer.getFeatures():
-                geom = feature.geometry()
-                centroid = feature.geometry().centroid().asPoint()
-                geom.rotate(angle, centroid)
-                list_geom.append([feature.id(), geom])
-
-            layer.startEditing()
-            provider.changeGeometryValues({
-                value[0]: value[1] for value in list_geom
-            })
-            layer.commitChanges()
-
-    def close_dlg(self):
-        self.close()
+                layer.startEditing()
+                provider.changeGeometryValues({
+                    value[0]: value[1] for value in list_geom
+                })
+                layer.commitChanges()
+            else:
+                QMessageBox.warning(self, "Warning", r"Введите число!",
+                                    QMessageBox.Ok)
